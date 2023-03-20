@@ -1,40 +1,32 @@
-name: CI
+name: C++ CI
 
-on:
-  push:
-  pull_request:
+on: [push, pull_request, workflow_dispatch]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+  DEBIAN_FRONTEND: noninteractive
 
 jobs:
-  build-and-test:
-
-    name: ${{ matrix.toolchain }}
+  build_and_test:
     runs-on: self-hosted
-
-    strategy:
-      matrix:
-        toolchain:
-          - linux-gcc
-
-        configuration:
-          - Debug
-
-        include:
-          - toolchain: linux-gcc
-            os: ubuntu-latest
-            compiler: gcc
+    container: ubuntu:20.04
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-    - name: Configure (${{ matrix.configuration }})
-      run: cmake -S . -Bbuild -DCMAKE_BUILD_TYPE=${{ matrix.configuration }}
+    - name: Install dependencies
+      working-directory: docker
+      run: ./install.sh
 
-    - name: Build with ${{ matrix.compiler }}
-      run: cmake --build build --config ${{ matrix.configuration }}
+    - name: Configure CMake
+      working-directory: ./challenge_01_isometries
+      run: cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build
+      working-directory: ./challenge_01_isometries
+      run: cmake --build build --config ${{env.BUILD_TYPE}}
 
     - name: Test
-      working-directory: build
-      env:
-        CTEST_OUTPUT_ON_FAILURE: 1
-      run: ctest -C ${{ matrix.configuration }}
+      working-directory: ./challenge_01_isometries/build
+      run: ctest -C ${{env.BUILD_TYPE}}
