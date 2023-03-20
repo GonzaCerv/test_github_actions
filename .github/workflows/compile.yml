@@ -1,0 +1,23 @@
+name: compile
+
+on: push
+jobs:
+  compile:
+    name: compile
+    runs-on: self-hosted
+    steps:
+      #-uses: actions/cache@v3   <===== YOU DO NOT NEED THIS!
+
+      - uses: actions/checkout@v3
+
+      - name: config shared=self-hosted
+        run: >-
+          mkdir build
+          cd build
+          cmake .. 
+
+      - name: build
+        run: make 
+
+      - name: test
+        run: ctest
